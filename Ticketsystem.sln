@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D5610AF0-A779-4CEF-A1CA-77C5F1B0C378}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{32AD637B-6BD7-4D78-9572-6A13341E1FA4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ticketsystem.Tests", "tests\Ticketsystem.Tests\Ticketsystem.Tests.csproj", "{9C07F553-1339-4AEF-B4F4-CFC97A04A4DF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ticketsystem.Kern", "src\Ticketsystem.Kern\Ticketsystem.Kern.csproj", "{0A9237FE-F05C-4921-9EAD-1203B3D5ABB1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ticketsystem.App", "src\Ticketsystem.App\Ticketsystem.App.csproj", "{7BC49AF7-EDC0-47D4-9B7C-EC92BC7A1151}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9C07F553-1339-4AEF-B4F4-CFC97A04A4DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C07F553-1339-4AEF-B4F4-CFC97A04A4DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C07F553-1339-4AEF-B4F4-CFC97A04A4DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C07F553-1339-4AEF-B4F4-CFC97A04A4DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A9237FE-F05C-4921-9EAD-1203B3D5ABB1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A9237FE-F05C-4921-9EAD-1203B3D5ABB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A9237FE-F05C-4921-9EAD-1203B3D5ABB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A9237FE-F05C-4921-9EAD-1203B3D5ABB1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7BC49AF7-EDC0-47D4-9B7C-EC92BC7A1151}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BC49AF7-EDC0-47D4-9B7C-EC92BC7A1151}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BC49AF7-EDC0-47D4-9B7C-EC92BC7A1151}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BC49AF7-EDC0-47D4-9B7C-EC92BC7A1151}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9C07F553-1339-4AEF-B4F4-CFC97A04A4DF} = {32AD637B-6BD7-4D78-9572-6A13341E1FA4}
+		{0A9237FE-F05C-4921-9EAD-1203B3D5ABB1} = {D5610AF0-A779-4CEF-A1CA-77C5F1B0C378}
+		{7BC49AF7-EDC0-47D4-9B7C-EC92BC7A1151} = {D5610AF0-A779-4CEF-A1CA-77C5F1B0C378}
+	EndGlobalSection
+EndGlobal

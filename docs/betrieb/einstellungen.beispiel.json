@@ -1,0 +1,29 @@
+{
+  "ConnectionStrings": {
+    "Default": ""
+  },
+  "Daten": {
+    "SicherungsOrdner": "",
+    "ZweitSicherungsOrdner": "E:\\Ticketsystem-Sicherung",
+    "AufbewahrteSicherungen": 10,
+    "SicherungBeimStart": true,
+    "SicherungIntervallStunden": 4
+  },
+  "Desktop": {
+    "ProtokollTage": 14
+  },
+  "Sla": {
+    "Critical": { "ReactionHours": 1, "ResolutionHours": 4 },
+    "High": { "ReactionHours": 4, "ResolutionHours": 8 },
+    "Medium": { "ReactionHours": 8, "ResolutionHours": 24 },
+    "Low": { "ReactionHours": 24, "ResolutionHours": 72 },
+    "PruefIntervallMinuten": 5
+  },
+  "Email": {
+    "Enabled": false,
+    "TenantId": "<Directory (tenant) ID>",
+    "ClientId": "<Application (client) ID>",
+    "ClientSecret": "<nur als Umgebungsvariable Email__ClientSecret setzen>",
+    "MailboxAddress": "support@example.org"
+  }
+}

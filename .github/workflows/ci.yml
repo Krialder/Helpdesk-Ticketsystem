@@ -1,0 +1,224 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Der Workflow liest nur den Inhalt und laedt Artefakte hoch; mehr Rechte
+# braucht das GITHUB_TOKEN nicht.
+permissions:
+  contents: read
+
+# Zwei Aufgaben nach der Art der Zusage: Die Fachtests beweisen die Regeln
+# (Linux, schnell), die Auslieferung beweist, dass genau das verteilte Paket
+# baut, startet und seine Fenster zeichnet (Windows). Geprueft wird die
+# veroeffentlichte Exe, nicht ein zweiter, nur im CI gebauter Stand.
+jobs:
+  bauen-und-testen:
+    name: Bauen und Fachtests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        shell: bash
+        run: |
+          dotnet test --no-build --configuration Release \
+            --logger "trx;LogFileName=ergebnisse.trx" \
+            --collect:"XPlat Code Coverage" \
+            --results-directory testergebnisse | tee testausgabe.txt
+
+      - name: Zusammenfassung
+        if: always()
+        shell: bash
+        run: |
+          echo "### Fachtests" >> "$GITHUB_STEP_SUMMARY"
+          grep -E "^(Passed|Failed)!" testausgabe.txt >> "$GITHUB_STEP_SUMMARY" || \
+            echo "Keine Zusammenfassung gefunden, siehe Protokoll." >> "$GITHUB_STEP_SUMMARY"
+
+      # continue-on-error: Ein voller Artefaktspeicher ("Artifact storage
+      # quota has been hit") darf einen gruenen Bau nicht rot machen und
+      # die folgenden Schritte nicht ueberspringen. Ein Artefakt ist eine
+      # Bequemlichkeit, kein Urteil.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        continue-on-error: true
+        with:
+          name: testergebnisse
+          path: testergebnisse/
+          retention-days: 7
+
+      # Die Oberflaeche rendert headless auch ohne Windows und ohne
+      # Bildschirm; die Sichtprobe liefert je Push ein Bild jedes Fensters.
+      - name: Headless-Sichtprobe der Avalonia-Oberflaeche
+        shell: bash
+        run: |
+          export ConnectionStrings__Default="Data Source=$RUNNER_TEMP/app-probe.db"
+          export SeedAgent__Password='Sichtprobe-CI1!'
+          export Daten__SicherungBeimStart=false
+          dotnet run --project src/Ticketsystem.App --no-build --configuration Release -- \
+            --sichtprobe app-sichtprobe agent@ticketsystem.local 'Sichtprobe-CI1!'
+          for bild in anmeldefenster grundfenster lagebild detailfenster detailfenster-verlauf erfassung erfassung-mail wissen verwaltung verwaltung-daten kontokarte einstellungen fassungen wissen-bearbeiten grundfenster-hell detailfenster-hell grundfenster-gross; do
+            test -f "app-sichtprobe/$bild.png"
+          done
+
+      # Die Sichtprobe baut ihre Fenster selbst und laesst damit den
+      # Rahmen aus, den ein Nutzer durchlaeuft (Desktop-Lebensdauer,
+      # MainWindow, Nachrichtenschleife). Die Startprobe faehrt genau diesen
+      # Rahmen hoch und wieder herunter.
+      - name: Startprobe der Avalonia-Oberflaeche
+        shell: bash
+        run: |
+          export ConnectionStrings__Default="Data Source=$RUNNER_TEMP/app-start.db"
+          export SeedAgent__Password='Sichtprobe-CI1!'
+          if ! dotnet run --project src/Ticketsystem.App --no-build --configuration Release -- \
+              --startprobe 8 | tee startprobe.log; then
+            echo "--- Protokoll ---"
+            cat "$RUNNER_TEMP"/Protokoll/ticketsystem-*.log 2>/dev/null || echo "kein Protokoll"
+            exit 1
+          fi
+          # Nicht nur der Exit-Code: Ein Aufbau, der durchlaeuft, ohne dass ein
+          # Fenster steht, waere derselbe Fehlschlag mit besserer Laune.
+          grep -q "Startprobe: Hauptfenster steht" startprobe.log
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        continue-on-error: true
+        with:
+          name: app-sichtprobe
+          path: |
+            app-sichtprobe/
+            startprobe.log
+          retention-days: 7
+
+  # Entwickelt wird unter Linux; eine Windows-Auslieferung laesst sich dort
+  # zwar bauen, aber nicht starten. Dieser Job ist deshalb die einzige Bau-, Start-
+  # und Sichtprobe des ausgelieferten Pakets.
+  auslieferung:
+    name: Auslieferung bauen und Sichtprobe
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Eigenstaendige Fassung fuer Windows bauen
+        run: >
+          dotnet publish src/Ticketsystem.App
+          --configuration Release --runtime win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:DebugType=none --output veroeffentlicht
+
+      - name: Auslieferung pruefen
+        shell: bash
+        run: |
+          test -f veroeffentlicht/Ticketsystem.App.exe
+          # Keine Einstellungsdatei im Paket: Die Einstellungen wohnen im Datenordner
+          # des Rechners; eine Datei neben der Exe waere der zweite Ort.
+          test ! -f veroeffentlicht/appsettings.json
+          # Entwicklungseinstellungen haben auf einem Arbeitsplatzrechner
+          # nichts zu suchen; ein wwwroot darf es ohne Web nicht mehr geben.
+          test ! -f veroeffentlicht/appsettings.Development.json
+          test ! -d veroeffentlicht/wwwroot
+          # Und keine Reste der abgeloesten Fassung.
+          test ! -f veroeffentlicht/Ticketsystem.Desktop.exe
+          echo "### Auslieferung" >> "$GITHUB_STEP_SUMMARY"
+          echo "Groesse: $(du -sh veroeffentlicht | cut -f1)" >> "$GITHUB_STEP_SUMMARY"
+
+      # Die veroeffentlichte Exe unter Windows wirklich starten: Der
+      # Linux-Job startet nur headless, und die Fachtests rufen Programm.Main
+      # nie auf.
+      - name: Startprobe der veroeffentlichten Exe
+        shell: pwsh
+        run: |
+          $daten = Join-Path $env:RUNNER_TEMP 'app-start'
+          New-Item -ItemType Directory -Path $daten -Force | Out-Null
+          $env:ConnectionStrings__Default = "Data Source=$daten\app.db"
+          $env:SeedAgent__Password = 'Sichtprobe-CI1!'
+          # Start-Process mit eigenem Warten: Bei einer WinExe wartet der
+          # &-Aufruf nicht, LASTEXITCODE bleibt leer, und das Skript liefe
+          # dem Programm davon (erster Lauf des Sichtprobenjobs, live belegt).
+          $p = Start-Process -FilePath 'veroeffentlicht\Ticketsystem.App.exe' -PassThru `
+            -ArgumentList @('--startprobe','8') -RedirectStandardOutput 'startprobe-win.log' `
+            -RedirectStandardError 'startprobe-win.err'
+          if (-not $p.WaitForExit(120000)) {
+            $p.Kill()
+            Write-Error 'Die Startprobe hat nach 120 Sekunden nicht geendet.'
+            exit 1
+          }
+          Get-Content 'startprobe-win.log' -ErrorAction SilentlyContinue
+          Get-Content 'startprobe-win.err' -ErrorAction SilentlyContinue
+          if ($p.ExitCode -ne 0) {
+            $protokoll = Get-ChildItem -Path (Join-Path $daten 'Protokoll') -Filter 'ticketsystem-*.log' -ErrorAction SilentlyContinue
+            if ($protokoll) { Write-Host '--- Protokoll ---'; Get-Content $protokoll[0].FullName }
+            Write-Error "Windows-Startprobe mit Exit-Code $($p.ExitCode) gescheitert."
+            exit 1
+          }
+          if (-not (Select-String -Path 'startprobe-win.log' -Pattern 'Hauptfenster steht' -Quiet)) {
+            Write-Error 'Die Startprobe lief durch, aber es stand kein Hauptfenster.'
+            exit 1
+          }
+
+      # Dieselbe Sichtprobe wie auf dem Linux-Rechner, nur aus der
+      # veroeffentlichten Exe heraus: Migrationen, Seed, Protokolldatei und
+      # die Fenster laufen denselben Weg wie beim Doppelklick auf dem
+      # Helpdesk-Rechner, nur dass die Fenster als Bilder enden.
+      - name: Sichtprobe der veroeffentlichten Exe
+        shell: pwsh
+        run: |
+          $daten = Join-Path $env:RUNNER_TEMP 'daten'
+          New-Item -ItemType Directory -Path $daten -Force | Out-Null
+          $env:ConnectionStrings__Default = "Data Source=$daten\app.db"
+          $env:SeedAgent__Password = 'Sichtprobe-CI1!'
+          $p = Start-Process -FilePath 'veroeffentlicht\Ticketsystem.App.exe' -PassThru -ArgumentList @(
+            '--sichtprobe','sichtprobe','agent@ticketsystem.local','Sichtprobe-CI1!')
+          if (-not $p.WaitForExit(120000)) {
+            $p.Kill()
+            Write-Error 'Die Sichtprobe hat nach 120 Sekunden nicht geendet.'
+            exit 1
+          }
+          $protokoll = Get-ChildItem -Path (Join-Path $daten 'Protokoll') -Filter 'ticketsystem-*.log' -ErrorAction SilentlyContinue
+          if ($p.ExitCode -ne 0) {
+            if ($protokoll) { Write-Host '--- Protokoll ---'; Get-Content $protokoll[0].FullName }
+            Write-Error "Sichtprobe mit Exit-Code $($p.ExitCode) gescheitert."
+            exit 1
+          }
+          foreach ($bild in 'anmeldefenster','grundfenster','lagebild','detailfenster','detailfenster-verlauf','erfassung','erfassung-mail','wissen','verwaltung','verwaltung-daten','kontokarte','einstellungen','fassungen','wissen-bearbeiten','grundfenster-hell','detailfenster-hell','grundfenster-gross') {
+            if (-not (Test-Path "sichtprobe/$bild.png")) { Write-Error "$bild.png fehlt."; exit 1 }
+          }
+          # Dieselben Zusagen wie die fruehere Startprobe: Es gibt ein
+          # Protokoll, und es nennt den Ablageort des Bestands.
+          if (-not $protokoll) {
+            Write-Error 'Die Protokolldatei ist nicht entstanden.'
+            exit 1
+          }
+          if (-not (Select-String -Path $protokoll[0].FullName -Pattern 'Datenbank:' -Quiet)) {
+            Write-Error 'Das Protokoll nennt den Ablageort des Bestands nicht.'
+            exit 1
+          }
+
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: ticketsystem-windows
+          path: veroeffentlicht/
+          retention-days: 7
+
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: windows-sichtprobe
+          path: sichtprobe/
+          retention-days: 7
