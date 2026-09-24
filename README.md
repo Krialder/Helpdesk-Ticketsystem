@@ -24,13 +24,16 @@ Es ist für einen Arbeitsplatz gebaut: ein Rechner, ein Bestand. Mehrere Arbeits
 
 ## Schnellstart
 
-Voraussetzung: Windows 10 oder 11, 64 Bit. Ein installiertes .NET ist nicht nötig.
+Das Repository enthält den Quelltext, keine fertige Programmdatei. Die Programmdatei `Ticketsystem.App.exe` bauen Sie einmal selbst; danach braucht der Rechner, auf dem sie läuft, kein installiertes .NET.
 
-1. Laden Sie `Ticketsystem-windows.zip` aus der Auslieferung herunter oder bauen Sie das Paket selbst (siehe [Betriebshandbuch](docs/betrieb/betriebshandbuch.md#installation)).
-2. Entpacken Sie das Archiv in einen eigenen Ordner, zum Beispiel `C:\Programme\Ticketsystem`, und starten Sie `Ticketsystem.App.exe`. Das Anmeldefenster öffnet sich; die Warnung von Windows SmartScreen beim ersten Start erklärt das Betriebshandbuch.
-3. Das Passwort des ersten Kontos steht im Protokoll. Wo genau, und wie Sie danach die Konten Ihres Teams anlegen, steht unter [Erste Anmeldung und Konten](docs/betrieb/betriebshandbuch.md#erste-anmeldung-und-konten).
+Voraussetzungen: Windows 10 oder 11, 64 Bit, und zum Bauen das [.NET SDK 8](https://dotnet.microsoft.com/download/dotnet/8.0) auf demselben oder einem anderen Windows-Rechner.
 
-Wer den Quelltext ausprobieren will, startet stattdessen `Start.cmd` im Projektordner; was das Skript tut, steht im [Entwicklerhandbuch](docs/entwicklung/entwicklerhandbuch.md#die-anwendung-starten).
+1. Laden Sie das Repository herunter (auf GitHub **Code**, **Download ZIP**, oder `git clone`) und entpacken Sie es in einen Ordner.
+2. Starten Sie in diesem Ordner `Veroeffentlichen.cmd` per Doppelklick. Das Skript baut die eigenständige Programmdatei; das dauert einige Minuten. Am Ende liegen im Ordner `veroeffentlicht` die Datei `Ticketsystem.App.exe` und daneben `Ticketsystem-windows.zip`.
+3. Kopieren Sie `Ticketsystem.App.exe` (oder das Archiv) auf den Helpdesk-Rechner in einen eigenen Ordner, zum Beispiel `C:\Programme\Ticketsystem`, und starten Sie die Datei. Das Anmeldefenster öffnet sich; die Warnung von Windows SmartScreen beim ersten Start erklärt das Betriebshandbuch.
+4. Das Passwort des ersten Kontos steht im Protokoll. Wo genau, und wie Sie danach die Konten Ihres Teams anlegen, steht unter [Erste Anmeldung und Konten](docs/betrieb/betriebshandbuch.md#erste-anmeldung-und-konten).
+
+Ohne eigenes SDK kommen Sie an die Programmdatei über das CI: Jeder Lauf unter **Actions** legt das Artefakt `ticketsystem-windows` ab, sieben Tage lang und nur für angemeldete GitHub-Konten. Wer den Quelltext nur ausprobieren will, startet stattdessen `Start.cmd` im Projektordner; was das Skript tut, steht im [Entwicklerhandbuch](docs/entwicklung/entwicklerhandbuch.md#die-anwendung-starten).
 
 ## Dokumentation
 
