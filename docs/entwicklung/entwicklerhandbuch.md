@@ -181,21 +181,7 @@ dotnet list package --vulnerable --include-transitive
 
 Die Ausgabe muss für alle drei Projekte „has no vulnerable packages" melden.
 
-## Beitragen
-
-Was ein Beitrag einhält:
-
-- Keine Warnung: `TreatWarningsAsErrors` gilt in allen Projekten. Eine Unterdrückung braucht einen Kommentar mit dem Grund, wie `AVLN3001` in der App.
-- Deutsch im Kern: Klassen, Methoden und Meldungen der Anwendung tragen deutsche Namen, weil Nutzer, Meldungen und Handbuch deutsch sind. Englisch bleibt, wo ein Rahmen es vorgibt (`Ticket.Status`, EF-Konventionen).
-- Rechte im Dienst, nicht im Fenster. Ein Fenster darf einen Knopf ausblenden, die Regel steht im Kern und wirft bei Verstoß.
-- Jede Änderung an einem Vorgang schreibt Historie über `AddHistory` im Dienst.
-- Farben nur über die `Palette`, Schriften nur über `Schriften`, Maße nach den Leitern in `LeiternTests`. Jedes bedienbare Element bekommt ein `ToolTip.Tip`; `HinweiseUeberallTests` meldet sonst das Fenster.
-- Schemaänderung heißt Migration, und `MigrationTests` bekommt einen Fall, wenn Daten umgeschrieben werden.
-- Kommentare erklären das Warum, die Invariante oder die Stolperfalle, nie das Was; ein Klassenkopf darf den Zweck der Klasse nennen. Sie sind für Menschen geschrieben, in ganzen Sätzen, nur mit `//`. Ist der Code ohne Kommentar unklar, wird er umgebaut, nicht kommentiert.
-- Commit-Betreff als Infinitiv- oder Imperativsatz, höchstens 72 Zeichen, ohne Punkt; der Body erklärt, was sich ändert und warum. Eine Fehlerbehebung nennt das Fehlbild und bringt ihren Test mit.
-- Vor dem Pull Request: `dotnet build`, `dotnet test`, Sichtprobe. Das CI muss grün sein.
-
-Was ein Beitrag nicht tut: Funktionen für ein vermutetes künftiges Bedürfnis anlegen, Abhängigkeiten ohne Grund hinzufügen, das Schema oder eine Schnittstelle ohne Migration und Test ändern.
+## offene Punkte
 
 Bekannte offene Punkte, an denen Sie ansetzen können:
 
